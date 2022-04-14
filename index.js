@@ -3,6 +3,7 @@ import fetch from 'node-fetch';
 
 async function main() {
 
+  // These URLs are used to test this tool. Replace with your own URLs. TRAILING SLASH is required.
   const input = ['https://www.imdb.com/title/tt0838221/', 'https://www.imdb.com/title/tt8847712/', 'https://www.imdb.com/title/tt0265666/'];
 
   const idArrays = []; // will be an array of arrays. An array for each url containing the nameIds
