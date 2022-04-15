@@ -24,7 +24,7 @@ async function main() {
     }
     url += 'fullcredits/';
 
-    const document = await getdocumentFromUrl(url);
+    const document = await getDocumentFromUrl(url);
     const anchors = document.getElementById('main').getElementsByTagName('a');
     processAnchors(anchors, nameIdReference, idArrays);
   }
@@ -38,7 +38,6 @@ async function main() {
 }
 
 function printResult(commonIds, nameIdReference) {
-
   if (commonIds.length === 0) {
     console.log('No common crew found');
     return;
@@ -75,7 +74,7 @@ function printResult(commonIds, nameIdReference) {
     return 0;
   });
 
-  // result table headers.  Order matters, since we're unshifting
+  // result table headers. Order matters, since we're unshifting
   prettyResult.unshift(['Name', 'URL']);
   prettyResult.unshift(['Common Crew', '']);
 
@@ -125,7 +124,7 @@ function processAnchors(anchors, nameIdReference, idArrays) {
   idArrays.push(ids);
 }
 
-async function getdocumentFromUrl(url) {
+async function getDocumentFromUrl(url) {
   const response = await fetch(url);
   const text = await response.text();
   const dom = new JSDOM(text);

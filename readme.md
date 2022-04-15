@@ -1,4 +1,4 @@
-# Find matching crew in multiple IMDb crew pages
+# Find common crew/actors in multiple IMDb credit pages
 
 > A quick hack solution inspired by the reddit post https://www.reddit.com/r/movies/comments/u35jgx/is_there_any_tool_out_there_that_quickly_filters/
 
