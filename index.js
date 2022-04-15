@@ -1,37 +1,105 @@
 import { JSDOM } from 'jsdom';
 import fetch from 'node-fetch';
+import urlRegex from 'url-regex';
+import { table } from 'table';
 
 async function main() {
-
-  // These URLs are used to test this tool. Replace with your own URLs. TRAILING SLASH is required.
-  const input = ['https://www.imdb.com/title/tt0838221/', 'https://www.imdb.com/title/tt8847712/', 'https://www.imdb.com/title/tt0265666/'];
+  // These URLs are used to test this tool. Replace with your own URLs. 
+  const input = ['https://www.imdb.com/title/tt0838221', 'https://www.imdb.com/title/tt8847712/', 'https://www.imdb.com/title/tt0265666'];
 
   const idArrays = []; // will be an array of arrays. An array for each url containing the nameIds
   let commonIds = [];
   const nameIdReference = new Map(); // reference: nameId -> name
 
-  for (const url of input) {
-    const document = await getdocumentFromUrl(url + 'fullcredits/');
+  if (!validateURLs(input)) {
+    return;
+  }
+
+  for (let i = 0; i < input.length; i++) {
+    console.log('Processing url: ' + (i + 1) + '/' + input.length);
+
+    let url = input[i];
+    if (url[url.length - 1] !== '/') {
+      url += '/';
+    }
+    url += 'fullcredits/';
+
+    const document = await getdocumentFromUrl(url);
     const anchors = document.getElementById('main').getElementsByTagName('a');
     processAnchors(anchors, nameIdReference, idArrays);
   }
 
-  // find unique in all
+  // find unique IDs in all the arrays
   commonIds = idArrays.reduce((p, c) => {
     return p.filter(e => c.includes(e));
   });
 
-  console.log('Common crew:');
+  printResult(commonIds, nameIdReference);
+}
+
+function printResult(commonIds, nameIdReference) {
+
+  if (commonIds.length === 0) {
+    console.log('No common crew found');
+    return;
+  }
+
+  const prettyResult = [];
+  const tableConfig = {
+    spanningCells: [
+      { col: 0, row: 0, colSpan: 2 }
+    ]
+  }
+
+  console.log('\n');
 
   for (const id of commonIds) {
     const url = 'https://www.imdb.com/name/' + id + '/';
-    console.log(url, nameIdReference.get(id));
+
+    // replace all trailing new lines from the name
+    const crewName = nameIdReference.get(id).replace(/\n+$/, "").trim();
+    prettyResult.push([crewName, url]);
   }
 
-  if(commonIds.length === 0) {
-    console.log('No common crew found');
+  prettyResult.sort((a, b) => {
+    const nameA = a[0].toUpperCase(); // ignore upper and lowercase
+    const nameB = b[0].toUpperCase(); // ignore upper and lowercase
+    if (nameA < nameB) {
+      return -1;
+    }
+    if (nameA > nameB) {
+      return 1;
+    }
+
+    // names must be equal
+    return 0;
+  });
+
+  // result table headers.  Order matters, since we're unshifting
+  prettyResult.unshift(['Name', 'URL']);
+  prettyResult.unshift(['Common Crew', '']);
+
+  console.log(table(prettyResult, tableConfig));
+}
+
+function validateURLs(urls) {
+  if (urls.length === 0) {
+    console.error('Error: Add some IMDb title URLs to the input array & run again.');
+    return false;
   }
 
+  for (const url of urls) {
+    const validURL = urlRegex({ exact: true }).test(url) && url.indexOf('http') === 0;
+    const imdbCheck = url.includes('imdb.com/title/'); // primitive check. 
+
+    if (!validURL || !imdbCheck) {
+      console.error('Error: Invalid URL: ' + url);
+      console.error('URL should look like: ' + 'https://www.imdb.com/title/tt0838221/' + '\n');
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function processAnchors(anchors, nameIdReference, idArrays) {
